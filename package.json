@@ -64,7 +64,7 @@
     "views": {
       "metals-explorer": [
         {
-          "id": "command",
+          "id": "commands",
           "name": "Commands"
         }
       ]

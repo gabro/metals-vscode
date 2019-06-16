@@ -7,14 +7,14 @@ import {
   TreeItemCollapsibleState,
   window,
   OutputChannel,
-  Uri
+  Uri,
+  Command
 } from "vscode";
 import {
   TreeViewNode,
   MetalsTreeViewChildren,
   MetalsTreeViewDidChange
 } from "./protocol";
-import { normalize } from "path";
 
 export function startTreeView(
   client: LanguageClient,
@@ -50,13 +50,22 @@ class MetalsTreeView implements TreeDataProvider<string> {
     this.out.appendLine("getTreeItem() " + JSON.stringify(uri));
     const item = this.items.get(uri);
     if (!item) return {};
+    var command: Command | undefined = undefined;
+    if (item.command) {
+      command = {
+        title: "Metals!!",
+        command: "metals." + item.command,
+        tooltip: "This is tooltip"
+      };
+    }
     return {
       label: item.label,
       id: item.nodeUri,
       resourceUri: Uri.parse(item.nodeUri),
       collapsibleState: item.isCollapsible
         ? TreeItemCollapsibleState.Collapsed
-        : TreeItemCollapsibleState.None
+        : TreeItemCollapsibleState.None,
+      command: command
     };
   }
   getChildren(uri?: string): Thenable<string[]> {
