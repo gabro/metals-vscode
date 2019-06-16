@@ -21,7 +21,7 @@ export function startTreeView(
   out: OutputChannel
 ): Disposable[] {
   let views: Map<string, MetalsTreeView> = new Map();
-  let viewIds: string[] = ["commands", "build"];
+  let viewIds: string[] = ["commands", "build", "compile"];
   const providers = viewIds.map(viewId => {
     let provider = new MetalsTreeView(client, out, viewId, views);
     views.set(viewId, provider);
