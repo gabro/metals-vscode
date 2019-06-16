@@ -43,6 +43,7 @@ import * as fs from "fs";
 import * as semver from "semver";
 import { getJavaHome } from "./getJavaHome";
 import { getJavaOptions } from "./getJavaOptions";
+import { startTreeView } from "./treeview";
 
 const outputChannel = window.createOutputChannel("Metals");
 const openSettingsAction = "Open settings";
@@ -139,7 +140,13 @@ function fetchAndLaunchMetals(context: ExtensionContext, javaHome: string) {
       "sonatype:snapshots",
       "-p"
     ]),
-    { env: { COURSIER_NO_TERM: "true", ...customRepositoriesEnv, ...process.env } }
+    {
+      env: {
+        COURSIER_NO_TERM: "true",
+        ...customRepositoriesEnv,
+        ...process.env
+      }
+    }
   );
   const title = `Downloading Metals v${serverVersion}`;
   trackDownloadProgress(title, outputChannel, fetchProcess).then(
@@ -370,7 +377,9 @@ function launchMetals(
     });
 
     window.onDidChangeWindowState(windowState => {
-      client.sendNotification(MetalsWindowStateDidChange.type, { focused: windowState.focused })
+      client.sendNotification(MetalsWindowStateDidChange.type, {
+        focused: windowState.focused
+      });
     });
 
     client.onRequest(MetalsInputBox.type, (options, requestToken) => {
@@ -428,6 +437,7 @@ function launchMetals(
         );
       });
     });
+    context.subscriptions.concat(startTreeView(client, outputChannel));
   });
 }
 

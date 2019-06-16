@@ -68,6 +68,14 @@ export interface MetalsWindowStateDidChangeParams {
   focused: boolean;
 }
 
+// ==================
+// Tree view protocol
+// ==================
+
+export interface MetalsTreeViewDidChangeParams {
+  nodes: TreeViewNode[];
+}
+
 export interface TreeViewNode {
   viewId: string;
   nodeUri: string;
@@ -76,18 +84,19 @@ export interface TreeViewNode {
   isCollapsible: boolean;
 }
 
-export namespace MetalsTreeViewDidChange {
-  export const type = new NotificationType<TreeViewNode, void>(
-    "metals/treeViewDidChange"
-  );
-}
-
 export interface MetalsTreeViewChildrenParams {
-  uri?: string;
+  viewId: string;
+  nodeUri?: string;
 }
 
 export interface MetalsTreeViewChildrenResult {
   nodes: TreeViewNode[];
+}
+
+export namespace MetalsTreeViewDidChange {
+  export const type = new NotificationType<TreeViewNode, void>(
+    "metals/treeViewDidChange"
+  );
 }
 
 export namespace MetalsTreeViewChildren {

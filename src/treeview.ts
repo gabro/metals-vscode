@@ -14,6 +14,7 @@ import {
   MetalsTreeViewChildren,
   MetalsTreeViewDidChange
 } from "./protocol";
+import { normalize } from "path";
 
 export function startTreeView(
   client: LanguageClient,
@@ -62,12 +63,10 @@ class MetalsTreeView implements TreeDataProvider<string> {
     this.out.appendLine("getChildren() " + JSON.stringify(uri));
     return this.client
       .sendRequest(MetalsTreeViewChildren.type, {
-        uri: uri
+        viewId: this.viewId,
+        nodeUri: uri
       })
       .then(result => {
-        for (const item in this.items) {
-          this.items.delete(item);
-        }
         result.nodes.forEach(n => {
           this.items.set(n.nodeUri, n);
         });
