@@ -32,7 +32,6 @@ export function startTreeView(
   client.onNotification(MetalsTreeViewDidChange.type, params => {
     params.nodes.forEach(node => {
       let treeView = views.get(node.viewId);
-      console.log("treeView");
       if (!treeView) {
         const bar = views.get("commands");
         return;
@@ -69,8 +68,7 @@ class MetalsTreeView implements TreeDataProvider<string> {
     if (item.command) {
       command = {
         title: "Metals!!",
-        command: "metals." + item.command,
-        tooltip: "This is tooltip"
+        command: "metals." + item.command
       };
     }
     return {
@@ -80,7 +78,8 @@ class MetalsTreeView implements TreeDataProvider<string> {
       collapsibleState: item.isCollapsible
         ? TreeItemCollapsibleState.Collapsed
         : TreeItemCollapsibleState.None,
-      command: command
+      command: command,
+      tooltip: item.tooltip
     };
   }
   getChildren(uri?: string): Thenable<string[]> {

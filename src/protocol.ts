@@ -81,6 +81,7 @@ export interface TreeViewNode {
   nodeUri?: string;
   label: string;
   command?: string;
+  tooltip?: string;
   isCollapsible: boolean;
 }
 
