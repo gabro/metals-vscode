@@ -342,6 +342,7 @@ function launchMetals(
     item.command = ClientCommands.toggleLogs;
     item.hide();
     client.onNotification(MetalsStatus.type, params => {
+      outputChannel.appendLine("status();");
       item.text = params.text;
       if (params.show) {
         item.show();

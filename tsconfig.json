@@ -6,9 +6,7 @@
     "outDir": "out",
     "lib": ["es2018"],
     "sourceMap": true,
-    "rootDir": "src",
-    "resolveJsonModule": true,
-    "esModuleInterop": true
+    "rootDir": "src"
   },
   "exclude": ["node_modules", ".vscode-test"]
 }

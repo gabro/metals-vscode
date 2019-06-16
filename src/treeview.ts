@@ -16,29 +16,39 @@ import {
   MetalsTreeViewDidChange
 } from "./protocol";
 
-import packageJson from "../package.json";
-
 export function startTreeView(
   client: LanguageClient,
   out: OutputChannel
 ): Disposable[] {
   let views: Map<string, MetalsTreeView> = new Map();
-  client.onNotification(MetalsTreeViewDidChange.type, params => {
-    let treeView = views.get(params.viewId);
-    if (!treeView) return;
-    treeView.items.set(params.nodeUri, params);
-    treeView.didChange.fire(params.nodeUri);
-  });
-  let viewIds: string[] = packageJson.contributes.views["metals-explorer"].map(
-    v => v.id
-  );
-  return viewIds.map(viewId => {
-    let provider = new MetalsTreeView(client, out, viewId);
+  let viewIds: string[] = ["commands", "build"];
+  const providers = viewIds.map(viewId => {
+    let provider = new MetalsTreeView(client, out, viewId, views);
     views.set(viewId, provider);
     return window.createTreeView(viewId, {
       treeDataProvider: provider
     });
   });
+  client.onNotification(MetalsTreeViewDidChange.type, params => {
+    params.nodes.forEach(node => {
+      let treeView = views.get(node.viewId);
+      console.log("treeView");
+      if (!treeView) {
+        const bar = views.get("commands");
+        return;
+      } else {
+      }
+      if (node.nodeUri) {
+        treeView.items.set(node.nodeUri, node);
+      }
+      if (node.nodeUri) {
+        treeView.didChange.fire(node.nodeUri);
+      } else {
+        treeView.didChange.fire(undefined);
+      }
+    });
+  });
+  return providers;
 }
 
 class MetalsTreeView implements TreeDataProvider<string> {
@@ -48,7 +58,8 @@ class MetalsTreeView implements TreeDataProvider<string> {
   constructor(
     readonly client: LanguageClient,
     readonly out: OutputChannel,
-    readonly viewId: string
+    readonly viewId: string,
+    readonly views: Map<string, MetalsTreeView>
   ) {}
   getTreeItem(uri: string): TreeItem {
     this.out.appendLine("getTreeItem() " + JSON.stringify(uri));
@@ -65,7 +76,7 @@ class MetalsTreeView implements TreeDataProvider<string> {
     return {
       label: item.label,
       id: item.nodeUri,
-      resourceUri: Uri.parse(item.nodeUri),
+      resourceUri: item.nodeUri ? Uri.parse(item.nodeUri) : undefined,
       collapsibleState: item.isCollapsible
         ? TreeItemCollapsibleState.Collapsed
         : TreeItemCollapsibleState.None,
@@ -81,9 +92,15 @@ class MetalsTreeView implements TreeDataProvider<string> {
       })
       .then(result => {
         result.nodes.forEach(n => {
-          this.items.set(n.nodeUri, n);
+          if (n.nodeUri) {
+            this.items.set(n.nodeUri, n);
+          }
         });
-        return result.nodes.map(n => n.nodeUri);
+        return result.nodes.map(n => n.nodeUri).filter(notEmpty);
       });
   }
+}
+
+function notEmpty<TValue>(value: TValue | null | undefined): value is TValue {
+  return value !== null && value !== undefined;
 }

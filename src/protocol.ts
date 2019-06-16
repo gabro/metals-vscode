@@ -78,7 +78,7 @@ export interface MetalsTreeViewDidChangeParams {
 
 export interface TreeViewNode {
   viewId: string;
-  nodeUri: string;
+  nodeUri?: string;
   label: string;
   command?: string;
   isCollapsible: boolean;
@@ -94,7 +94,7 @@ export interface MetalsTreeViewChildrenResult {
 }
 
 export namespace MetalsTreeViewDidChange {
-  export const type = new NotificationType<TreeViewNode, void>(
+  export const type = new NotificationType<MetalsTreeViewDidChangeParams, void>(
     "metals/treeViewDidChange"
   );
 }
