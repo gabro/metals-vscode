@@ -16,6 +16,8 @@ import {
   MetalsTreeViewDidChange
 } from "./protocol";
 
+import packageJson from "../package.json";
+
 export function startTreeView(
   client: LanguageClient,
   out: OutputChannel
@@ -27,7 +29,9 @@ export function startTreeView(
     treeView.items.set(params.nodeUri, params);
     treeView.didChange.fire(params.nodeUri);
   });
-  let viewIds: string[] = ["commands"];
+  let viewIds: string[] = packageJson.contributes.views["metals-explorer"].map(
+    v => v.id
+  );
   return viewIds.map(viewId => {
     let provider = new MetalsTreeView(client, out, viewId);
     views.set(viewId, provider);
