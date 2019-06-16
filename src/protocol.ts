@@ -58,11 +58,43 @@ export interface MetalsInputBoxResult {
 }
 
 export namespace MetalsWindowStateDidChange {
-  export const type = new NotificationType<MetalsWindowStateDidChangeParams, void>(
-    "metals/windowStateDidChange"
-  );
+  export const type = new NotificationType<
+    MetalsWindowStateDidChangeParams,
+    void
+  >("metals/windowStateDidChange");
 }
 
 export interface MetalsWindowStateDidChangeParams {
   focused: boolean;
+}
+
+export interface TreeViewNode {
+  viewId: string;
+  nodeUri: string;
+  label: string;
+  command?: string;
+  isCollapsible: boolean;
+}
+
+export namespace MetalsTreeViewDidChange {
+  export const type = new NotificationType<TreeViewNode, void>(
+    "metals/treeViewDidChange"
+  );
+}
+
+export interface MetalsTreeViewChildrenParams {
+  uri?: string;
+}
+
+export interface MetalsTreeViewChildrenResult {
+  nodes: TreeViewNode[];
+}
+
+export namespace MetalsTreeViewChildren {
+  export const type = new RequestType<
+    MetalsTreeViewChildrenParams,
+    MetalsTreeViewChildrenResult,
+    void,
+    void
+  >("metals/treeViewChildren");
 }

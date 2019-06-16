@@ -1,0 +1,13 @@
+{
+  "folders": [
+	{
+		"path": "/Users/olafurpg/dev/metals"
+	},
+	{
+		"path": "."
+	}
+],
+  "settings": {
+    "metals.serverVersion": "0.6.1"
+  }
+}

@@ -52,6 +52,23 @@
         "editor.suggestSelection": "first"
       }
     },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "metals-explorer",
+          "title": "Metals",
+          "icon": "images/sample.svg"
+        }
+      ]
+    },
+    "views": {
+      "metals-explorer": [
+        {
+          "id": "command",
+          "name": "Commands"
+        }
+      ]
+    },
     "configuration": {
       "title": "Metals",
       "properties": {
