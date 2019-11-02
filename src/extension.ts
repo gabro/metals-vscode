@@ -24,7 +24,11 @@ import {
   Selection,
   TextDocument as VscodeTextDocument,
   TextEditorRevealType,
-  TextEditor
+  TextEditor,
+  DecorationOptions,
+  DecorationRangeBehavior,
+  MarkdownString,
+  Hover
 } from "vscode";
 import {
   LanguageClient,
@@ -37,7 +41,9 @@ import {
   CancellationToken,
   Location,
   TextDocumentPositionParams,
-  TextDocument
+  TextDocument,
+  RequestType,
+  TextDocumentIdentifier
 } from "vscode-languageclient";
 import { exec } from "child_process";
 import { ClientCommands } from "./client-commands";
@@ -492,6 +498,8 @@ function launchMetals(
       });
     });
 
+    registerDecorationsCommands(context, client);
+
     window.onDidChangeActiveTextEditor(editor => {
       if (editor && isSupportedLanguage(editor.document.languageId)) {
         client.sendNotification(
@@ -815,4 +823,56 @@ function migrateStringSettingToArray(id: string): void {
         ConfigurationTarget.Workspace
       );
   }
+}
+
+const decorationType = window.createTextEditorDecorationType({
+  rangeBehavior: DecorationRangeBehavior.ClosedClosed
+});
+
+function registerDecorationsCommands(
+  context: ExtensionContext,
+  client: LanguageClient
+) {
+  context.subscriptions.push(
+    commands.registerCommand("metals.hide-decorations", () => {
+      window.activeTextEditor!.setDecorations(decorationType, []);
+    }),
+    commands.registerCommand("metals.show-decorations", () => {
+      return client
+        .sendRequest(MetalsDecorations.type, {
+          td: TextDocumentIdentifier.create(
+            window.activeTextEditor!.document.uri.toString()
+          )
+        })
+        .then(({ decorations }) => {
+          const decorationOptions = decorations.map<DecorationOptions>(d => ({
+            range: d.range,
+            renderOptions: {
+              after: {
+                contentText: d.text,
+                opacity: "0.7"
+              }
+            }
+          }));
+
+          window.activeTextEditor!.setDecorations(
+            decorationType,
+            decorationOptions
+          );
+        });
+    })
+  );
+}
+
+namespace MetalsDecorations {
+  interface DecorationResult {
+    range: Range;
+    text: string;
+  }
+  export const type = new RequestType<
+    { td: TextDocumentIdentifier },
+    { decorations: Array<DecorationResult> },
+    void,
+    void
+  >("metals/decorations");
 }
