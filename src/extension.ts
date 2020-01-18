@@ -57,7 +57,13 @@ import {
 import { LazyProgress } from "./lazy-progress";
 import * as fs from "fs";
 import * as semver from "semver";
-import { getJavaHome, getJavaOptions } from "metals-languageclient";
+import {
+  getJavaHome,
+  getJavaOptions,
+  isSupportedLanguage,
+  checkDottyIde,
+  downloadProgress
+} from "metals-languageclient";
 import { startTreeView } from "./treeview";
 import { MetalsFeatures } from "./MetalsFeatures";
 import { MetalsTreeViewReveal, MetalsTreeViews } from "./tree-view-protocol";
@@ -106,11 +112,11 @@ function fetchAndLaunchMetals(context: ExtensionContext, javaHome: string) {
     );
     return;
   }
-  const dottyArtifact = dottyIdeArtifact();
-  if (dottyArtifact && fs.existsSync(dottyArtifact)) {
+  const dottyIde = checkDottyIde(workspace.workspaceFolders[0]?.uri.fsPath);
+  if (dottyIde.enabled) {
     outputChannel.appendLine(
       `Metals will not start since Dotty is enabled for this workspace. ` +
-        `To enable Metals, remove the file ${dottyArtifact} and run 'Reload window'`
+        `To enable Metals, remove the file ${dottyIde.path} and run 'Reload window'`
     );
     return;
   }
@@ -282,7 +288,7 @@ function launchMetals(
     // First try to gracefully shutdown the server with LSP `shutdown` and `exit`.
     // If Metals doesn't respond within 4 seconds we kill the process.
     const timeout = (ms: number) =>
-      new Promise((_resolve, reject) => setTimeout(reject, ms));
+      new Promise<void>((_resolve, reject) => setTimeout(reject, ms));
     const gracefullyTerminate = client
       .sendRequest(ShutdownRequest.type)
       .then(() => {
@@ -457,7 +463,7 @@ function launchMetals(
           if (params.command && values.includes(params.command)) {
             registerCommand(params.command, () => {
               client.sendRequest(ExecuteCommandRequest.type, {
-                command: params.command
+                command: params.command!
               });
             });
           }
@@ -647,27 +653,16 @@ function trackDownloadProgress(
   download: ChildProcessPromise
 ): Promise<string> {
   const progress = new LazyProgress();
-  let stdout: Buffer[] = [];
-  download.stdout.on("data", (out: Buffer) => {
-    stdout.push(out);
-  });
-  download.stderr.on("data", (err: Buffer) => {
-    const msg = err.toString().trim();
-    if (!msg.startsWith("Downloading")) {
-      output.appendLine(msg);
-    }
-    progress.startOrContinue(title, output, download);
-  });
-  download.on("close", (code: number) => {
-    if (code != 0) {
+  return downloadProgress({
+    download,
+    onProgress: msg => {
+      progress.startOrContinue(title, output, download);
+    },
+    onError: stdout => {
       // something went wrong, print stdout to the console to help troubleshoot.
       stdout.forEach(buffer => output.append(buffer.toString()));
-      throw Error(`coursier exit: ${code}`);
     }
   });
-  return download.then(() =>
-    stdout.map(buffer => buffer.toString().trim()).join("")
-  );
 }
 
 function readableSeconds(totalSeconds: number): string {
@@ -726,15 +721,6 @@ function enableScaladocIndentation() {
       }
     ]
   });
-}
-
-function dottyIdeArtifact(): string | undefined {
-  if (workspace.workspaceFolders) {
-    return path.join(
-      workspace.workspaceFolders[0].uri.fsPath,
-      ".dotty-ide-artifact"
-    );
-  }
 }
 
 function detectLaunchConfigurationChanges() {
@@ -832,16 +818,5 @@ function checkServerVersion() {
             break;
         }
       });
-  }
-}
-
-function isSupportedLanguage(languageId: TextDocument["languageId"]): boolean {
-  switch (languageId) {
-    case "scala":
-    case "sc":
-    case "java":
-      return true;
-    default:
-      return false;
   }
 }
